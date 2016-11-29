@@ -18,6 +18,8 @@
 #include "post.h"
 #include "synchconsole.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 //----------------------------------------------------------------------
 // Kernel::Kernel
@@ -47,9 +49,13 @@ Kernel::Kernel(int argc, char **argv)
         } else if (strcmp(argv[i], "-s") == 0) {
             debugUserProg = TRUE;
 		} else if (strcmp(argv[i], "-e") == 0) {
-        	execfile[++execfileNum]= argv[++i];
+        	execfile[++execfileNum] = argv[++i];
 			cout << execfile[execfileNum] << "\n";
-		} else if (strcmp(argv[i], "-ci") == 0) {
+        } else  if (strcmp(argv[i], "-ep") == 0) {
+            execfile[++execfileNum] = argv[++i];
+            priority[execfileNum] = atoi(argv[++i]);
+			cout << "Receive argument: " << execfile[execfileNum] << " with priority " << priority[execfileNum] << "." << endl;
+        } else if (strcmp(argv[i], "-ci") == 0) {
 	    	ASSERT(i + 1 < argc);
 	    	consoleIn = argv[i + 1];
 	    	i++;
@@ -276,6 +282,7 @@ void Kernel::ExecAll()
 int Kernel::Exec(char* name)
 {
 	t[threadNum] = new Thread(name, threadNum);
+    t[threadNum]->setPriority(priority[threadNum]);
 	t[threadNum]->space = new AddrSpace();
 	t[threadNum]->Fork((VoidFunctionPtr) &ForkExecute, (void *)t[threadNum]);
 	threadNum++;

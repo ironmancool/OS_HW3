@@ -22,6 +22,16 @@
 #include "debug.h"
 #include "scheduler.h"
 #include "main.h"
+#include <stdio.h>
+#include <algorithm>
+
+bool cmpL2(Thread *th1, Thread *th2) {
+    return th1->checkPriority() > th2->checkPriority();
+}
+
+bool cmpL1(Thread *th1, Thread *th2) {
+    return th1->checkT() < th2->checkT();
+}
 
 //----------------------------------------------------------------------
 // Scheduler::Scheduler
@@ -31,7 +41,9 @@
 
 Scheduler::Scheduler()
 { 
-    readyList = new List<Thread *>; 
+    L3Queue = new std::list<Thread *>; 
+    L2Queue = new std::list<Thread *>;
+    L1Queue = new std::list<Thread *>;
     toBeDestroyed = NULL;
 } 
 
@@ -42,7 +54,9 @@ Scheduler::Scheduler()
 
 Scheduler::~Scheduler()
 { 
-    delete readyList; 
+    delete L3Queue; 
+    delete L2Queue;
+    delete L1Queue;
 } 
 
 //----------------------------------------------------------------------
@@ -60,7 +74,22 @@ Scheduler::ReadyToRun (Thread *thread)
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
 	//cout << "Putting thread on ready list: " << thread->getName() << endl ;
     thread->setStatus(READY);
-    readyList->Append(thread);
+    //L3Queue->Append(thread);
+    if (thread->checkPriority() < 50) {
+        // L3
+        printf("Tick %d: Thread %d is inserted into queue L3\n", kernel->stats->totalTicks, thread->getID());
+        L3Queue->push_back(thread);
+    } else if (thread->checkPriority() < 100) {
+        // L2
+        printf("Tick %d: Thread %d is inserted into queue L2\n", kernel->stats->totalTicks, thread->getID());
+        L2Queue->push_back(thread);
+        L2Queue->sort(cmpL2);
+    } else {
+        // L1
+        printf("Tick %d: Thread %d is inserted into queue L1\n", kernel->stats->totalTicks, thread->getID());
+        L1Queue->push_back(thread);
+        L1Queue->sort(cmpL1);
+    }
 }
 
 //----------------------------------------------------------------------
@@ -75,12 +104,41 @@ Thread *
 Scheduler::FindNextToRun ()
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
+    Thread *thread;
 
-    if (readyList->IsEmpty()) {
+    if (L1Queue->empty() && L2Queue->empty() && L3Queue->empty()) {
+        return NULL;
+    } else if (L1Queue->empty() && L2Queue->empty()) {
+        // L3
+        kernel->alarm->setStat(true); // turn on alarm
+        thread = L3Queue->front();
+        L3Queue->pop_front();
+        printf("Tick %d: Thread %d is removed from queue L3\n", kernel->stats->totalTicks, thread->getID());
+        thread->setTempStartTick(kernel->stats->totalTicks);
+        return thread;
+    } else if (L1Queue->empty()) {
+        // L2
+        kernel->alarm->setStat(false); // turn off alarm
+        thread = L2Queue->front();
+        L2Queue->pop_front();
+        printf("Tick %d: Thread %d is removed from queue L2\n", kernel->stats->totalTicks, thread->getID());
+        thread->setTempStartTick(kernel->stats->totalTicks);
+        return thread;
+    } else {
+        // L1
+        kernel->alarm->setStat(false); // turn off alarm
+        thread = L1Queue->front();
+        L1Queue->pop_front();
+        printf("Tick %d: Thread %d is removed from queue L1\n", kernel->stats->totalTicks, thread->getID());
+        thread->setTempStartTick(kernel->stats->totalTicks);
+        return thread;
+    }
+    
+    /*if (L3Queue->IsEmpty()) {
 		return NULL;
     } else {
-    	return readyList->RemoveFront();
-    }
+    	return L3Queue->RemoveFront();
+    }*/
 }
 
 //----------------------------------------------------------------------
@@ -124,6 +182,12 @@ Scheduler::Run (Thread *nextThread, bool finishing)
     nextThread->setStatus(RUNNING);      // nextThread is now running
     
     DEBUG(dbgThread, "Switching from: " << oldThread->getName() << " to: " << nextThread->getName());
+    int oldThreadExecTime = kernel->stats->totalTicks - oldThread->checkTempStartTick();
+    printf("Tick %d: Thread %d is now selected for execution\n", kernel->stats->totalTicks, nextThread->getID());
+    printf("Tick %d: Thread %d is replaced, and it has executed %d ticks\n", kernel->stats->totalTicks, oldThread->getID(), oldThreadExecTime);
+    if (oldThread->checkT() == -1) oldThread->setT(oldThreadExecTime);
+    else oldThread->setT(oldThreadExecTime / 2 + oldThread->checkT() / 2);
+    oldThread->setLastExecTick(kernel->stats->totalTicks);
     
     // This is a machine-dependent assembly language routine defined 
     // in switch.s.  You may have to think
@@ -175,5 +239,5 @@ void
 Scheduler::Print()
 {
     cout << "Ready list contents:\n";
-    readyList->Apply(ThreadPrint);
+    //L3Queue->Apply(ThreadPrint);
 }

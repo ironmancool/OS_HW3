@@ -50,7 +50,6 @@
 Kernel *kernel;
 Debug *debug;
 
-
 //----------------------------------------------------------------------
 // Cleanup
 //	Delete kernel data structures; called when user hits "ctl-C".

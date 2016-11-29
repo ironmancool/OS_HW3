@@ -88,6 +88,15 @@ class Thread {
 					// is called
 
     // basic thread operations
+    
+    void setPriority(int inPriority) { priority = inPriority; }
+    int checkPriority() { return priority; }
+    void setTempStartTick(int inTick) { tempStartTick = inTick; }
+    int checkTempStartTick() { return tempStartTick; }
+    void setT(int inT) { t = inT; }
+    int checkT() { return t; }
+    void setLastExecTick(int inTick) { lastExecTick = inTick; }
+    int checkLastExecTick() { return lastExecTick; }
 
     void Fork(VoidFunctionPtr func, void *arg); 
     				// Make thread run (*func)(arg)
@@ -117,6 +126,12 @@ class Thread {
     char* name;
 	int   ID;
     void StackAllocate(VoidFunctionPtr func, void *arg);
+    
+    int priority;
+    int tempStartTick;
+    int t;
+    int lastExecTick;
+    
     				// Allocate a stack for thread.
 				// Used internally by Fork()
 

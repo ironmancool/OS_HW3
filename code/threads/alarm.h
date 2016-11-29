@@ -29,11 +29,15 @@ class Alarm : public CallBackObj {
 				// to "toCall" every time slice.
     ~Alarm() { delete timer; }
     
+    void setStat(bool inStat) { stat = inStat; }
+    
     void WaitUntil(int x);	// suspend execution until time > now + x
                                 // this method is not yet implemented
 
   private:
     Timer *timer;		// the hardware timer device
+    
+    bool stat; // enable alarm when stat is true
 
     void CallBack();		// called when the hardware
 				// timer generates an interrupt

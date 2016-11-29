@@ -10,8 +10,8 @@
 #define SCHEDULER_H
 
 #include "copyright.h"
-#include "list.h"
 #include "thread.h"
+#include <list>
 
 // The following class defines the scheduler/dispatcher abstraction -- 
 // the data structures and operations needed to keep track of which 
@@ -32,10 +32,16 @@ class Scheduler {
     				// running needs to be deleted
     void Print();		// Print contents of ready list
     
+    std::list<Thread *> *getL1Queue() { return L1Queue; }
+    std::list<Thread *> *getL2Queue() { return L2Queue; }
+    std::list<Thread *> *getL3Queue() { return L3Queue; }
+    
     // SelfTest for scheduler is implemented in class Thread
     
   private:
-    List<Thread *> *readyList;  // queue of threads that are ready to run,
+    std::list<Thread *> *L3Queue;  // queue of threads that are ready to run,
+    std::list<Thread *> *L2Queue;
+    std::list<Thread *> *L1Queue;
 				// but not running
     Thread *toBeDestroyed;	// finishing thread to be destroyed
     				// by the next thread that runs
