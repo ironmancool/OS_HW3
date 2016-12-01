@@ -48,7 +48,7 @@ Thread::Thread(char* threadName, int threadID)
     }
     space = NULL;
     priority = 0;
-    tempStartTick = 0;
+    tempTick = 0;
     t = -1;
     lastExecTick = 0;
 }

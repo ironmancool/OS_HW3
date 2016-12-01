@@ -159,18 +159,24 @@ Interrupt::OneTick()
     Statistics *stats = kernel->stats;
     Scheduler *scheduler = kernel->scheduler;
 
-// advance simulated time
+    // advance simulated time
     if (status == SystemMode) {
         stats->totalTicks += SystemTick;
-	stats->systemTicks += SystemTick;
+        stats->systemTicks += SystemTick;
     } else {
-	stats->totalTicks += UserTick;
-	stats->userTicks += UserTick;
+        stats->totalTicks += UserTick;
+        stats->userTicks += UserTick;
+        kernel->currentThread->setTempTick(kernel->currentThread->checkTempTick() + UserTick);
+        if (kernel->currentThread->checkT() == -1) kernel->currentThread->setT(kernel->currentThread->checkTempTick());
+        else kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
     }
+    
     DEBUG(dbgInt, "== Tick " << stats->totalTicks << " ==");
 
-// check any pending interrupts are now ready to fire
+    // check any pending interrupts are now ready to fire
     ChangeLevel(IntOn, IntOff);	// first, turn off interrupts
+                                // (interrupt handlers run with
+                                // interrupts disabled)
     
     // handle L1Queue
     std::list<Thread *> *queue = scheduler->getL1Queue();
@@ -224,18 +230,39 @@ Interrupt::OneTick()
     }
     scheduler->getL2Queue()->sort(cmpL2InInterrupt);
     
-				// (interrupt handlers run with
-				// interrupts disabled)
-    CheckIfDue(FALSE);		// check for pending interrupts
+    Thread *candidate = scheduler->PureFindNext();
+    if (candidate != NULL && kernel->currentThread->checkPriority() != 150)
+        if (candidate->checkPriority() >= 50 && candidate->checkPriority() < 100) { // if candidate is in L2...
+            if (kernel->currentThread->checkPriority() < 50) yieldOnReturn = true; // L3 is preempted by L2
+            else if (kernel->currentThread->checkPriority() < 100) {
+                if (candidate->checkPriority() > kernel->currentThread->checkPriority()) yieldOnReturn = true; // both L2, but candidate's priority is higher
+            }
+        } else if (candidate->checkPriority() >= 100 && candidate->checkPriority() < 150) { // if candidate is in L1...
+            if (kernel->currentThread->checkPriority() < 50) yieldOnReturn = true; // L3 is preempted by L1
+            else if (kernel->currentThread->checkPriority() < 100) yieldOnReturn = true; // L2 is preempted by L1
+            else {
+                if (candidate->checkT() < kernel->currentThread->checkT()) yieldOnReturn = true; // both L1, but candidate's t is smaller
+            }
+        }
+    /*queue = scheduler->getL1Queue();
+    for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); it++) {
+        Thread *temp = (*it);
+        printf("Thread: %d t=%d\n", temp->getID(), temp->checkT());
+    }
+    if (kernel->currentThread->getID() == 2) {
+        printf("t: %d, executed: %d\n", kernel->currentThread->checkT(), kernel->currentThread->checkTempTick());
+    }*/
+    
+    CheckIfDue(FALSE);		    // check for pending interrupts
     ChangeLevel(IntOff, IntOn);	// re-enable interrupts
     
     // Important!! It seems like the timer would fire an interrupt...
-    if (yieldOnReturn) {	// if the timer device handler asked 
-    				// for a context switch, ok to do it now
-	yieldOnReturn = FALSE;
- 	status = SystemMode;		// yield is a kernel routine
-	kernel->currentThread->Yield();
-	status = oldStatus;
+    if (yieldOnReturn) {	    // if the timer device handler asked 
+                                // for a context switch, ok to do it now
+        yieldOnReturn = FALSE;
+        status = SystemMode;	// yield is a kernel routine
+        kernel->currentThread->Yield();
+        status = oldStatus;
     }
 }
 

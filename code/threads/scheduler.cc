@@ -114,7 +114,7 @@ Scheduler::FindNextToRun ()
         thread = L3Queue->front();
         L3Queue->pop_front();
         printf("Tick %d: Thread %d is removed from queue L3\n", kernel->stats->totalTicks, thread->getID());
-        thread->setTempStartTick(kernel->stats->totalTicks);
+        thread->setTempTick(0);
         return thread;
     } else if (L1Queue->empty()) {
         // L2
@@ -122,7 +122,7 @@ Scheduler::FindNextToRun ()
         thread = L2Queue->front();
         L2Queue->pop_front();
         printf("Tick %d: Thread %d is removed from queue L2\n", kernel->stats->totalTicks, thread->getID());
-        thread->setTempStartTick(kernel->stats->totalTicks);
+        thread->setTempTick(0);
         return thread;
     } else {
         // L1
@@ -130,7 +130,7 @@ Scheduler::FindNextToRun ()
         thread = L1Queue->front();
         L1Queue->pop_front();
         printf("Tick %d: Thread %d is removed from queue L1\n", kernel->stats->totalTicks, thread->getID());
-        thread->setTempStartTick(kernel->stats->totalTicks);
+        thread->setTempTick(0);
         return thread;
     }
     
@@ -139,6 +139,27 @@ Scheduler::FindNextToRun ()
     } else {
     	return L3Queue->RemoveFront();
     }*/
+}
+
+Thread* Scheduler::PureFindNext() {
+    ASSERT(kernel->interrupt->getLevel() == IntOff);
+    Thread *thread;
+
+    if (L1Queue->empty() && L2Queue->empty() && L3Queue->empty()) {
+        return NULL;
+    } else if (L1Queue->empty() && L2Queue->empty()) {
+        // L3
+        thread = L3Queue->front();
+        return thread;
+    } else if (L1Queue->empty()) {
+        // L2
+        thread = L2Queue->front();
+        return thread;
+    } else {
+        // L1
+        thread = L1Queue->front();
+        return thread;
+    }
 }
 
 //----------------------------------------------------------------------
@@ -166,13 +187,13 @@ Scheduler::Run (Thread *nextThread, bool finishing)
     ASSERT(kernel->interrupt->getLevel() == IntOff);
 
     if (finishing) {	// mark that we need to delete current thread
-         ASSERT(toBeDestroyed == NULL);
-	 toBeDestroyed = oldThread;
+        ASSERT(toBeDestroyed == NULL);
+        toBeDestroyed = oldThread;
     }
     
     if (oldThread->space != NULL) {	// if this thread is a user program,
         oldThread->SaveUserState(); 	// save the user's CPU registers
-	oldThread->space->SaveState();
+        oldThread->space->SaveState();
     }
     
     oldThread->CheckOverflow();		    // check if the old thread
@@ -182,11 +203,8 @@ Scheduler::Run (Thread *nextThread, bool finishing)
     nextThread->setStatus(RUNNING);      // nextThread is now running
     
     DEBUG(dbgThread, "Switching from: " << oldThread->getName() << " to: " << nextThread->getName());
-    int oldThreadExecTime = kernel->stats->totalTicks - oldThread->checkTempStartTick();
     printf("Tick %d: Thread %d is now selected for execution\n", kernel->stats->totalTicks, nextThread->getID());
-    printf("Tick %d: Thread %d is replaced, and it has executed %d ticks\n", kernel->stats->totalTicks, oldThread->getID(), oldThreadExecTime);
-    if (oldThread->checkT() == -1) oldThread->setT(oldThreadExecTime);
-    else oldThread->setT(oldThreadExecTime / 2 + oldThread->checkT() / 2);
+    printf("Tick %d: Thread %d is replaced, and it has executed %d ticks\n", kernel->stats->totalTicks, oldThread->getID(), oldThread->checkTempTick());
     oldThread->setLastExecTick(kernel->stats->totalTicks);
     
     // This is a machine-dependent assembly language routine defined 
@@ -209,7 +227,7 @@ Scheduler::Run (Thread *nextThread, bool finishing)
     
     if (oldThread->space != NULL) {	    // if there is an address space
         oldThread->RestoreUserState();     // to restore, do it.
-	oldThread->space->RestoreState();
+        oldThread->space->RestoreState();
     }
 }
 

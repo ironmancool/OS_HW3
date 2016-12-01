@@ -159,7 +159,8 @@ PostOfficeInput::PostOfficeInput(int nBoxes)
 
     network = new NetworkInput(this);
 
-    Thread *t = new Thread("postal worker", 0);
+    Thread *t = new Thread("postal worker", 100);
+    t->setPriority(149); // message passing has the highest priority.
 
     t->Fork(PostOfficeInput::PostalDelivery, this);
 }

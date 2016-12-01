@@ -91,8 +91,8 @@ class Thread {
     
     void setPriority(int inPriority) { priority = inPriority; }
     int checkPriority() { return priority; }
-    void setTempStartTick(int inTick) { tempStartTick = inTick; }
-    int checkTempStartTick() { return tempStartTick; }
+    void setTempTick(int inTick) { tempTick = inTick; }
+    int checkTempTick() { return tempTick; }
     void setT(int inT) { t = inT; }
     int checkT() { return t; }
     void setLastExecTick(int inTick) { lastExecTick = inTick; }
@@ -128,7 +128,7 @@ class Thread {
     void StackAllocate(VoidFunctionPtr func, void *arg);
     
     int priority;
-    int tempStartTick;
+    int tempTick;
     int t;
     int lastExecTick;
     
