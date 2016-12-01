@@ -114,7 +114,6 @@ Scheduler::FindNextToRun ()
         thread = L3Queue->front();
         L3Queue->pop_front();
         printf("Tick %d: Thread %d is removed from queue L3\n", kernel->stats->totalTicks, thread->getID());
-        thread->setTempTick(0);
         return thread;
     } else if (L1Queue->empty()) {
         // L2
@@ -122,7 +121,6 @@ Scheduler::FindNextToRun ()
         thread = L2Queue->front();
         L2Queue->pop_front();
         printf("Tick %d: Thread %d is removed from queue L2\n", kernel->stats->totalTicks, thread->getID());
-        thread->setTempTick(0);
         return thread;
     } else {
         // L1
@@ -130,7 +128,6 @@ Scheduler::FindNextToRun ()
         thread = L1Queue->front();
         L1Queue->pop_front();
         printf("Tick %d: Thread %d is removed from queue L1\n", kernel->stats->totalTicks, thread->getID());
-        thread->setTempTick(0);
         return thread;
     }
     
@@ -206,6 +203,7 @@ Scheduler::Run (Thread *nextThread, bool finishing)
     printf("Tick %d: Thread %d is now selected for execution\n", kernel->stats->totalTicks, nextThread->getID());
     printf("Tick %d: Thread %d is replaced, and it has executed %d ticks\n", kernel->stats->totalTicks, oldThread->getID(), oldThread->checkTempTick());
     oldThread->setLastExecTick(kernel->stats->totalTicks);
+    oldThread->setTempTick(0);
     
     // This is a machine-dependent assembly language routine defined 
     // in switch.s.  You may have to think
