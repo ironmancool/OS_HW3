@@ -129,7 +129,6 @@ class Thread {
     
     int priority;
     int tempTick;
-    int memTempTick;
     int t;
     int lastExecTick;
     
