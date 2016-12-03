@@ -167,8 +167,6 @@ Interrupt::OneTick()
         stats->totalTicks += UserTick;
         stats->userTicks += UserTick;
         kernel->currentThread->setTempTick(kernel->currentThread->checkTempTick() + UserTick);
-        if (kernel->currentThread->checkT() == -1) kernel->currentThread->setT(kernel->currentThread->checkTempTick());
-        else kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
     }
     
     DEBUG(dbgInt, "== Tick " << stats->totalTicks << " ==");
@@ -231,6 +229,7 @@ Interrupt::OneTick()
     scheduler->getL2Queue()->sort(cmpL2InInterrupt);
     
     Thread *candidate = scheduler->PureFindNext();
+    //if (candidate != NULL) printf("candidate ID: %d, t: %d\n", candidate->getID(), candidate->checkT());
     if (candidate != NULL && kernel->currentThread->checkPriority() != 150)
         if (candidate->checkPriority() >= 50 && candidate->checkPriority() < 100) { // if candidate is in L2...
             if (kernel->currentThread->checkPriority() < 50) yieldOnReturn = true; // L3 is preempted by L2

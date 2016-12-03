@@ -72,9 +72,12 @@ Scheduler::ReadyToRun (Thread *thread)
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
-	//cout << "Putting thread on ready list: " << thread->getName() << endl ;
+    
     thread->setStatus(READY);
-    //L3Queue->Append(thread);
+    //printf("thread: %d, temptick: %d, checkT: %d\n", thread->getID(), thread->checkTempTick(), thread->checkT());
+    if (!thread->doNotUpdateT) thread->setT(thread->checkTempTick() / 2 + thread->checkT() / 2);
+    thread->doNotUpdateT = false;
+    //printf("after T: %d\n", thread->checkT());
     if (thread->checkPriority() < 50) {
         // L3
         printf("Tick %d: Thread %d is inserted into queue L3\n", kernel->stats->totalTicks, thread->getID());

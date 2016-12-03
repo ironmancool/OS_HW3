@@ -129,6 +129,7 @@ class Thread {
     
     int priority;
     int tempTick;
+    int memTempTick;
     int t;
     int lastExecTick;
     
@@ -146,6 +147,7 @@ class Thread {
     void RestoreUserState();		// restore user-level register state
 
     AddrSpace *space;			// User code this thread is running.
+    bool doNotUpdateT;
 };
 
 // external function, dummy routine whose sole job is to call Thread::Print
