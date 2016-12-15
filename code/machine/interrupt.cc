@@ -167,6 +167,8 @@ Interrupt::OneTick()
     ChangeLevel(IntOn, IntOff);	// first, turn off interrupts
                                 // (interrupt handlers run with
                                 // interrupts disabled)
+                                
+    /* Final: aging...preemptive or not? */
     
     // handle L1Queue
     std::list<Thread *> *queue = scheduler->getL1Queue();

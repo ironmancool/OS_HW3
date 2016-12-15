@@ -75,7 +75,8 @@ Scheduler::ReadyToRun (Thread *thread)
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
     
     thread->setStatus(READY);
-    kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
+    // kernel->currentThread == thread...yielding
+    if (kernel->currentThread != thread) kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
     
     if (thread->checkPriority() < 50) {
         // L3
@@ -86,13 +87,13 @@ Scheduler::ReadyToRun (Thread *thread)
         printf("Tick %d: Thread %d is inserted into queue L2\n", kernel->stats->totalTicks, thread->getID());
         L2Queue->push_back(thread);
         L2Queue->sort(cmpL2);
-        enablePreemptOnce = true;
+        if (kernel->currentThread != thread) enablePreemptOnce = true;
     } else {
         // L1
         printf("Tick %d: Thread %d is inserted into queue L1\n", kernel->stats->totalTicks, thread->getID());
         L1Queue->push_back(thread);
         L1Queue->sort(cmpL1);
-        enablePreemptOnce = true;
+        if (kernel->currentThread != thread) enablePreemptOnce = true;
     }
 }
 
