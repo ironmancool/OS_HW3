@@ -19,6 +19,7 @@
 
 class Scheduler {
   public:
+    bool enablePreemptOnce;
     Scheduler();		// Initialize list of ready threads 
     ~Scheduler();		// De-allocate ready list
 

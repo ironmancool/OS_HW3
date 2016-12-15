@@ -228,21 +228,26 @@ Interrupt::OneTick()
     }
     scheduler->getL2Queue()->sort(cmpL2InInterrupt);
     
-    Thread *candidate = scheduler->PureFindNext();
-    //if (candidate != NULL) printf("candidate ID: %d, t: %d\n", candidate->getID(), candidate->checkT());
-    if (candidate != NULL && kernel->currentThread->checkPriority() != 150)
-        if (candidate->checkPriority() >= 50 && candidate->checkPriority() < 100) { // if candidate is in L2...
-            if (kernel->currentThread->checkPriority() < 50) yieldOnReturn = true; // L3 is preempted by L2
-            else if (kernel->currentThread->checkPriority() < 100) {
-                if (candidate->checkPriority() > kernel->currentThread->checkPriority()) yieldOnReturn = true; // both L2, but candidate's priority is higher
-            }
-        } else if (candidate->checkPriority() >= 100 && candidate->checkPriority() < 150) { // if candidate is in L1...
-            if (kernel->currentThread->checkPriority() < 50) yieldOnReturn = true; // L3 is preempted by L1
-            else if (kernel->currentThread->checkPriority() < 100) yieldOnReturn = true; // L2 is preempted by L1
-            else {
-                if (candidate->checkT() < kernel->currentThread->checkT()) yieldOnReturn = true; // both L1, but candidate's t is smaller
+    if (scheduler->enablePreemptOnce) {
+        Thread *candidate = scheduler->PureFindNext();
+        //if (candidate != NULL) printf("candidate ID: %d, t: %d\n", candidate->getID(), candidate->checkT());
+        if (candidate != NULL && kernel->currentThread->checkPriority() != 150) {
+            if (candidate->checkPriority() >= 50 && candidate->checkPriority() < 100) { // if candidate is in L2...
+                if (kernel->currentThread->checkPriority() < 50) yieldOnReturn = true; // L3 is preempted by L2
+                else if (kernel->currentThread->checkPriority() < 100) {
+                    if (candidate->checkPriority() > kernel->currentThread->checkPriority()) yieldOnReturn = true; // both L2, but candidate's priority is higher
+                }
+            } else if (candidate->checkPriority() >= 100 && candidate->checkPriority() < 150) { // if candidate is in L1...
+                if (kernel->currentThread->checkPriority() < 50) yieldOnReturn = true; // L3 is preempted by L1
+                else if (kernel->currentThread->checkPriority() < 100) yieldOnReturn = true; // L2 is preempted by L1
+                else {
+                    if (candidate->checkT() < kernel->currentThread->checkT()) yieldOnReturn = true; // both L1, but candidate's t is smaller
+                }
             }
         }
+        scheduler->enablePreemptOnce = false;
+    }
+    
     /*queue = scheduler->getL1Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); it++) {
         Thread *temp = (*it);

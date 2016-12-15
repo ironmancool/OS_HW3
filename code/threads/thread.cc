@@ -51,7 +51,6 @@ Thread::Thread(char* threadName, int threadID)
     tempTick = 0;
     t = 0;
     lastExecTick = 0;
-    doNotUpdateT = false;
 }
 
 //----------------------------------------------------------------------
@@ -244,8 +243,6 @@ Thread::Yield ()
 void
 Thread::Sleep (bool finishing)
 {
-    kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
-    kernel->currentThread->doNotUpdateT = true;
     Thread *nextThread;
     
     ASSERT(this == kernel->currentThread);
