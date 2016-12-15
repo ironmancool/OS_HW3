@@ -31,14 +31,6 @@ static char *intTypeNames[] = { "timer", "disk", "console write",
 			"console read", "network send", 
 			"network recv"};
             
-bool cmpL2InInterrupt(Thread *th1, Thread *th2) {
-    return th1->checkPriority() > th2->checkPriority();
-}
-
-bool cmpL1InInterrupt(Thread *th1, Thread *th2) {
-    return th1->checkT() < th2->checkT();
-}
-            
 //----------------------------------------------------------------------
 // PendingInterrupt::PendingInterrupt
 // 	Initialize a hardware device interrupt that is to be scheduled 
@@ -188,7 +180,6 @@ Interrupt::OneTick()
             temp->setLastExecTick(stats->totalTicks);
         }
     }
-    queue->sort(cmpL1InInterrupt);
     
     // handle L2Queue
     queue = scheduler->getL2Queue();
@@ -201,13 +192,11 @@ Interrupt::OneTick()
             temp->setLastExecTick(stats->totalTicks);
             if (temp->checkPriority() >= 100) {
                 it = queue->erase(it);
-                scheduler->getL1Queue()->push_back(temp);
                 printf("Tick %d: Thread %d is removed from queue L2\n", stats->totalTicks, temp->getID());
-                printf("Tick %d: Thread %d is inserted into queue L1\n", stats->totalTicks, temp->getID());
+                scheduler->ReadyToRun(temp);
             } else it++;
         } else it++;
     }
-    scheduler->getL1Queue()->sort(cmpL1InInterrupt);
     
     // handle L3Queue
     queue = scheduler->getL3Queue();
@@ -220,13 +209,11 @@ Interrupt::OneTick()
             temp->setLastExecTick(stats->totalTicks);
             if (temp->checkPriority() >= 50) {
                 it = queue->erase(it);
-                scheduler->getL2Queue()->push_back(temp);
                 printf("Tick %d: Thread %d is removed from queue L3\n", stats->totalTicks, temp->getID());
-                printf("Tick %d: Thread %d is inserted into queue L2\n", stats->totalTicks, temp->getID());
+                scheduler->ReadyToRun(temp);
             } else it++;
         } else it++;
     }
-    scheduler->getL2Queue()->sort(cmpL2InInterrupt);
     
     if (scheduler->enablePreemptOnce) {
         Thread *candidate = scheduler->PureFindNext();

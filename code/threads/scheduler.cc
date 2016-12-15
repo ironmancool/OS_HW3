@@ -45,6 +45,7 @@ Scheduler::Scheduler()
     L2Queue = new std::list<Thread *>;
     L1Queue = new std::list<Thread *>;
     toBeDestroyed = NULL;
+    enablePreemptOnce = false;
 } 
 
 //----------------------------------------------------------------------
