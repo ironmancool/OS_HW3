@@ -31,6 +31,14 @@ static char *intTypeNames[] = { "timer", "disk", "console write",
 			"console read", "network send", 
 			"network recv"};
             
+bool cmpL2InInterrupt(Thread *th1, Thread *th2) {
+    return th1->checkPriority() > th2->checkPriority();
+}
+
+bool cmpL1InInterrupt(Thread *th1, Thread *th2) {
+    return th1->checkT() < th2->checkT();
+}
+            
 //----------------------------------------------------------------------
 // PendingInterrupt::PendingInterrupt
 // 	Initialize a hardware device interrupt that is to be scheduled 
@@ -167,13 +175,12 @@ Interrupt::OneTick()
     ChangeLevel(IntOn, IntOff);	// first, turn off interrupts
                                 // (interrupt handlers run with
                                 // interrupts disabled)
-                                
-    /* Final: aging...preemptive or not? */
     
     // handle L1Queue
     std::list<Thread *> *queue = scheduler->getL1Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); it++) {
         if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+            scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
             if (addedPriority > 149) addedPriority = 149;
@@ -182,11 +189,13 @@ Interrupt::OneTick()
             temp->setLastExecTick(stats->totalTicks);
         }
     }
+    queue->sort(cmpL1InInterrupt);
     
     // handle L2Queue
     queue = scheduler->getL2Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); ) {
         if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+            scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
             printf("Tick %d: Thread %d changes its priority from %d to %d\n", stats->totalTicks, temp->getID(), temp->checkPriority(), addedPriority);
@@ -194,16 +203,20 @@ Interrupt::OneTick()
             temp->setLastExecTick(stats->totalTicks);
             if (temp->checkPriority() >= 100) {
                 it = queue->erase(it);
+                scheduler->getL1Queue()->push_back(temp);
                 printf("Tick %d: Thread %d is removed from queue L2\n", stats->totalTicks, temp->getID());
-                scheduler->ReadyToRun(temp);
+                printf("Tick %d: Thread %d is inserted into queue L1\n", stats->totalTicks, temp->getID());
+                scheduler->getL1Queue()->sort(cmpL1InInterrupt);
             } else it++;
         } else it++;
     }
+    queue->sort(cmpL2InInterrupt);
     
     // handle L3Queue
     queue = scheduler->getL3Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); ) {
         if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+            scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
             printf("Tick %d: Thread %d changes its priority from %d to %d\n", stats->totalTicks, temp->getID(), temp->checkPriority(), addedPriority);
@@ -211,8 +224,10 @@ Interrupt::OneTick()
             temp->setLastExecTick(stats->totalTicks);
             if (temp->checkPriority() >= 50) {
                 it = queue->erase(it);
+                scheduler->getL2Queue()->push_back(temp);
                 printf("Tick %d: Thread %d is removed from queue L3\n", stats->totalTicks, temp->getID());
-                scheduler->ReadyToRun(temp);
+                printf("Tick %d: Thread %d is inserted into queue L2\n", stats->totalTicks, temp->getID());
+                scheduler->getL2Queue()->sort(cmpL2InInterrupt);
             } else it++;
         } else it++;
     }
