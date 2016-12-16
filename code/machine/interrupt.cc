@@ -179,7 +179,7 @@ Interrupt::OneTick()
     // handle L1Queue
     std::list<Thread *> *queue = scheduler->getL1Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); it++) {
-        if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+        if (stats->totalTicks - (*it)->checkLastInQueueTick() >= 1500) {
             // enable scheduling, and update t of currentThread once
             kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
             scheduler->enablePreemptOnce = true;
@@ -188,7 +188,7 @@ Interrupt::OneTick()
             if (addedPriority > 149) addedPriority = 149;
             printf("Tick %d: Thread %d changes its priority from %d to %d\n", stats->totalTicks, temp->getID(), temp->checkPriority(), addedPriority);
             temp->setPriority(addedPriority);
-            temp->setLastExecTick(stats->totalTicks);
+            temp->setLastInQueueTick(stats->totalTicks);
         }
     }
     queue->sort(cmpL1InInterrupt);
@@ -196,7 +196,7 @@ Interrupt::OneTick()
     // handle L2Queue
     queue = scheduler->getL2Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); ) {
-        if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+        if (stats->totalTicks - (*it)->checkLastInQueueTick() >= 1500) {
             // enable scheduling, and update t of currentThread once
             kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
             scheduler->enablePreemptOnce = true;
@@ -204,7 +204,7 @@ Interrupt::OneTick()
             int addedPriority = temp->checkPriority() + 10;
             printf("Tick %d: Thread %d changes its priority from %d to %d\n", stats->totalTicks, temp->getID(), temp->checkPriority(), addedPriority);
             temp->setPriority(addedPriority);
-            temp->setLastExecTick(stats->totalTicks);
+            temp->setLastInQueueTick(stats->totalTicks);
             if (temp->checkPriority() >= 100) {
                 it = queue->erase(it);
                 scheduler->getL1Queue()->push_back(temp);
@@ -219,7 +219,7 @@ Interrupt::OneTick()
     // handle L3Queue
     queue = scheduler->getL3Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); ) {
-        if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+        if (stats->totalTicks - (*it)->checkLastInQueueTick() >= 1500) {
             // enable scheduling, and update t of currentThread once
             kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
             scheduler->enablePreemptOnce = true;
@@ -227,7 +227,7 @@ Interrupt::OneTick()
             int addedPriority = temp->checkPriority() + 10;
             printf("Tick %d: Thread %d changes its priority from %d to %d\n", stats->totalTicks, temp->getID(), temp->checkPriority(), addedPriority);
             temp->setPriority(addedPriority);
-            temp->setLastExecTick(stats->totalTicks);
+            temp->setLastInQueueTick(stats->totalTicks);
             if (temp->checkPriority() >= 50) {
                 it = queue->erase(it);
                 scheduler->getL2Queue()->push_back(temp);
@@ -249,7 +249,9 @@ Interrupt::OneTick()
             printf("t: %d, executed: %d\n", kernel->currentThread->checkT(), kernel->currentThread->checkTempTick());
         */
         Thread *candidate = scheduler->PureFindNext();
-        //if (candidate != NULL) printf("candidate ID: %d, t: %d\n", candidate->getID(), candidate->checkT());
+        /*
+        if (candidate != NULL) printf("candidate ID: %d, t: %d\n", candidate->getID(), candidate->checkT());
+        */
         if (candidate != NULL && kernel->currentThread->checkPriority() != 150) {
             if (candidate->checkPriority() >= 50 && candidate->checkPriority() < 100) { // if candidate is in L2...
                 if (kernel->currentThread->checkPriority() < 50) yieldOnReturn = true; // L3 is preempted by L2

@@ -95,8 +95,8 @@ class Thread {
     int checkTempTick() { return tempTick; }
     void setT(int inT) { t = inT; }
     int checkT() { return t; }
-    void setLastExecTick(int inTick) { lastExecTick = inTick; }
-    int checkLastExecTick() { return lastExecTick; }
+    void setLastInQueueTick(int inTick) { lastInQueueTick = inTick; }
+    int checkLastInQueueTick() { return lastInQueueTick; }
 
     void Fork(VoidFunctionPtr func, void *arg); 
     				// Make thread run (*func)(arg)
@@ -130,7 +130,7 @@ class Thread {
     int priority;
     int tempTick;
     int t;
-    int lastExecTick;
+    int lastInQueueTick;
     
     				// Allocate a stack for thread.
 				// Used internally by Fork()

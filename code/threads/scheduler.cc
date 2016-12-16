@@ -75,7 +75,7 @@ Scheduler::ReadyToRun (Thread *thread)
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
     
     thread->setStatus(READY);
-    thread->setLastExecTick(kernel->stats->totalTicks);
+    thread->setLastInQueueTick(kernel->stats->totalTicks);
     // kernel->currentThread == thread...yielding
     if (kernel->currentThread != thread) {
         kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);

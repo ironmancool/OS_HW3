@@ -50,7 +50,7 @@ Thread::Thread(char* threadName, int threadID)
     priority = 0;
     tempTick = 0;
     t = 0;
-    lastExecTick = 0;
+    lastInQueueTick = 0;
 }
 
 //----------------------------------------------------------------------
