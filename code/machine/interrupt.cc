@@ -239,6 +239,15 @@ Interrupt::OneTick()
     }
     
     if (scheduler->enablePreemptOnce) {
+        /*
+        queue = scheduler->getL1Queue();
+        for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); it++) {
+            Thread *temp = (*it);
+            printf("Thread: %d t=%d\n", temp->getID(), temp->checkT());
+        }
+        if (kernel->currentThread->getID() == 2)
+            printf("t: %d, executed: %d\n", kernel->currentThread->checkT(), kernel->currentThread->checkTempTick());
+        */
         Thread *candidate = scheduler->PureFindNext();
         //if (candidate != NULL) printf("candidate ID: %d, t: %d\n", candidate->getID(), candidate->checkT());
         if (candidate != NULL && kernel->currentThread->checkPriority() != 150) {
@@ -257,15 +266,6 @@ Interrupt::OneTick()
         }
         scheduler->enablePreemptOnce = false;
     }
-    
-    /*queue = scheduler->getL1Queue();
-    for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); it++) {
-        Thread *temp = (*it);
-        printf("Thread: %d t=%d\n", temp->getID(), temp->checkT());
-    }
-    if (kernel->currentThread->getID() == 2) {
-        printf("t: %d, executed: %d\n", kernel->currentThread->checkT(), kernel->currentThread->checkTempTick());
-    }*/
     
     CheckIfDue(FALSE);		    // check for pending interrupts
     ChangeLevel(IntOff, IntOn);	// re-enable interrupts

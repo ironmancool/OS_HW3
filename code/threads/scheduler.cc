@@ -75,6 +75,7 @@ Scheduler::ReadyToRun (Thread *thread)
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
     
     thread->setStatus(READY);
+    thread->setLastExecTick(kernel->stats->totalTicks);
     // kernel->currentThread == thread...yielding
     if (kernel->currentThread != thread) {
         kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
@@ -208,7 +209,6 @@ Scheduler::Run (Thread *nextThread, bool finishing)
     DEBUG(dbgThread, "Switching from: " << oldThread->getName() << " to: " << nextThread->getName());
     printf("Tick %d: Thread %d is now selected for execution\n", kernel->stats->totalTicks, nextThread->getID());
     printf("Tick %d: Thread %d is replaced, and it has executed %d ticks\n", kernel->stats->totalTicks, oldThread->getID(), oldThread->checkTempTick());
-    oldThread->setLastExecTick(kernel->stats->totalTicks);
     oldThread->setTempTick(0);
     
     // This is a machine-dependent assembly language routine defined 
