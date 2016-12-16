@@ -180,6 +180,8 @@ Interrupt::OneTick()
     std::list<Thread *> *queue = scheduler->getL1Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); it++) {
         if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+            // enable scheduling, and update t of currentThread once
+            kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
             scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
@@ -195,6 +197,8 @@ Interrupt::OneTick()
     queue = scheduler->getL2Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); ) {
         if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+            // enable scheduling, and update t of currentThread once
+            kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
             scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
@@ -216,6 +220,8 @@ Interrupt::OneTick()
     queue = scheduler->getL3Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); ) {
         if (stats->totalTicks - (*it)->checkLastExecTick() >= 1500) {
+            // enable scheduling, and update t of currentThread once
+            kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
             scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
