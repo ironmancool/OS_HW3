@@ -181,8 +181,8 @@ Interrupt::OneTick()
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); it++) {
         if (stats->totalTicks - (*it)->checkLastInQueueTick() >= 1500) {
             // enable scheduling, and update t of currentThread once
-            kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
-            scheduler->enablePreemptOnce = true;
+            // kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
+            // scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
             if (addedPriority > 149) addedPriority = 149;
