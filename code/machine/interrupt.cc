@@ -197,15 +197,15 @@ Interrupt::OneTick()
     queue = scheduler->getL2Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); ) {
         if (stats->totalTicks - (*it)->checkLastInQueueTick() >= 1500) {
-            // enable scheduling, and update t of currentThread once
-            kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
-            scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
             printf("Tick %d: Thread %d changes its priority from %d to %d\n", stats->totalTicks, temp->getID(), temp->checkPriority(), addedPriority);
             temp->setPriority(addedPriority);
             temp->setLastInQueueTick(stats->totalTicks);
             if (temp->checkPriority() >= 100) {
+		// enable scheduling, and update t of currentThread once
+		kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
+		scheduler->enablePreemptOnce = true;
                 it = queue->erase(it);
                 scheduler->getL1Queue()->push_back(temp);
                 printf("Tick %d: Thread %d is removed from queue L2\n", stats->totalTicks, temp->getID());
@@ -220,15 +220,15 @@ Interrupt::OneTick()
     queue = scheduler->getL3Queue();
     for (std::list<Thread *>::iterator it = queue->begin(); it != queue->end(); ) {
         if (stats->totalTicks - (*it)->checkLastInQueueTick() >= 1500) {
-            // enable scheduling, and update t of currentThread once
-            kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
-            scheduler->enablePreemptOnce = true;
             Thread *temp = (*it);
             int addedPriority = temp->checkPriority() + 10;
             printf("Tick %d: Thread %d changes its priority from %d to %d\n", stats->totalTicks, temp->getID(), temp->checkPriority(), addedPriority);
             temp->setPriority(addedPriority);
             temp->setLastInQueueTick(stats->totalTicks);
             if (temp->checkPriority() >= 50) {
+		// enable scheduling, and update t of currentThread once
+		kernel->currentThread->setT(kernel->currentThread->checkTempTick() / 2 + kernel->currentThread->checkT() / 2);
+		scheduler->enablePreemptOnce = true;
                 it = queue->erase(it);
                 scheduler->getL2Queue()->push_back(temp);
                 printf("Tick %d: Thread %d is removed from queue L3\n", stats->totalTicks, temp->getID());
